@@ -27,7 +27,7 @@ import {
 
 } from './accessory';
 
-const pigpio = require('pigpio-client');
+import pigpio from "pigpio-client";
 
 export class EsjRPi implements DynamicPlatformPlugin {
 
@@ -90,6 +90,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
   tryConnect(host) {
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
 
     me.connect(host).then(() => {
@@ -129,6 +130,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
   async connect(host): Promise<boolean> {
 
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
 
     me.i2cHandles = {};
@@ -154,6 +156,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
     this.log.warn('Initializing all Accessories');
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     Object.entries(this.links).forEach(([key, value]) => {
 
       this.links[key].init();
@@ -350,10 +353,9 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
         value = this.dec2bin(value[1], len);
 
-        let arr = String(value).split('');
-        arr.reverse();
+        const arr = String(value).split('');
 
-        this.i2cDevices[address] = arr;
+        this.i2cDevices[address] = arr.reverse();
 
         this.log.info('Start I2C device:', JSON.stringify(this.i2cDevices));
 
@@ -379,11 +381,11 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
   async i2cApply(address) {
 
-    let arr = JSON.parse(JSON.stringify(this.i2cDevices[address]));
+    const arr = JSON.parse(JSON.stringify(this.i2cDevices[address]));
 
-    arr.reverse();
+    //arr.reverse();
 
-    const bit = arr.join('');
+    const bit = arr.reverse().join('');
 
     this.log.debug('I2C(' + address + '):', bit, this.bin2dec(bit));
 

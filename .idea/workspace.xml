@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="f42889ff-6c88-4c5a-9f81-8801c87a1734" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
@@ -48,7 +51,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
+    <property name="settings.editor.selected.configurable" value="web-ide.project.structure" />
     <property name="ts.external.directory.path" value="$PROJECT_DIR$/node_modules/typescript/lib" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -96,6 +99,7 @@
       <workItem from="1647999233338" duration="468000" />
       <workItem from="1648000152022" duration="19000" />
       <workItem from="1648000256791" duration="17000" />
+      <workItem from="1648000532314" duration="6944000" />
     </task>
     <task id="LOCAL-00001">
       <created>1624207275048</created>

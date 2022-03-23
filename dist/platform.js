@@ -1,9 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EsjRPi = void 0;
 const settings_1 = require("./settings");
 const accessory_1 = require("./accessory");
-const pigpio = require('pigpio-client');
+const pigpio_client_1 = __importDefault(require("pigpio-client"));
 class EsjRPi {
     constructor(log, config, api) {
         this.log = log;
@@ -36,6 +39,7 @@ class EsjRPi {
         });
     }
     tryConnect(host) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const me = this;
         me.connect(host).then(() => {
             me.pigpio.once('connected', async (info) => {
@@ -65,11 +69,13 @@ class EsjRPi {
         });
     }
     async connect(host) {
-        this.i2cHandles = {};
-        this.i2cDevices = {};
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const me = this;
+        me.i2cHandles = {};
+        me.i2cDevices = {};
         return new Promise((resolve, reject) => {
             try {
-                this.pigpio = pigpio.pigpio({ host: host });
+                me.pigpio = pigpio_client_1.default.pigpio({ host: host });
                 resolve(true);
             }
             catch (e) {
@@ -79,6 +85,7 @@ class EsjRPi {
     }
     initAccessories() {
         this.log.warn('Initializing all Accessories');
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         Object.entries(this.links).forEach(([key, value]) => {
             this.links[key].init();
         });
@@ -101,16 +108,6 @@ class EsjRPi {
             this.removedAccessories.splice(0, this.removedAccessories.length);
         }
     }
-    generateUuid(device) {
-        let name = device.type;
-        if (typeof device.gpio !== 'undefined') {
-            name = name + '_gpio_' + device.gpio;
-        }
-        else if (typeof device.i2cAddress !== 'undefined') {
-            name = name + '_i2c_' + device.i2cAddress + '_' + device.i2cBit;
-        }
-        return this.api.hap.uuid.generate(name);
-    }
     discoverDevices() {
         this.removeAccessories();
         for (const device of this.config.devices) {
@@ -126,84 +123,76 @@ class EsjRPi {
                 this.api.registerPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, [accessory]);
             }
             switch (device.type.toLowerCase()) {
-                case 'button':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioButtonAccessory(this, accessory, device);
-                    }
-                    break;
-                case 'contact':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioContactSensorAccessory(this, accessory, device);
-                    }
-                    break;
-                case 'motion':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioMotionSensorAccessory(this, accessory, device);
-                    }
-                    break;
-                case 'occupancy':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioOccupancySensorAccessory(this, accessory, device);
-                    }
-                    break;
+                // Output
                 case 'light':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioLightAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cLightAccessory(this, accessory, device);
-                    }
+                    this.links[uuid] = new accessory_1.DefaultOutputAccessory(this, accessory, device, 'Lightbulb', {
+                        On: false,
+                    });
                     break;
                 case 'switch':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioSwitchAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cSwitchAccessory(this, accessory, device);
-                    }
+                    this.links[uuid] = new accessory_1.DefaultOutputAccessory(this, accessory, device, 'Switch', {
+                        On: false,
+                    });
                     break;
                 case 'outlet':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioOutletAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cOutletAccessory(this, accessory, device);
-                    }
-                    break;
-                case 'fan':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.GpioFanAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cFanAccessory(this, accessory, device);
-                    }
+                    this.links[uuid] = new accessory_1.DefaultOutputAccessory(this, accessory, device, 'Outlet', {
+                        On: false,
+                    });
                     break;
                 case 'faucet':
-                    if (typeof device.gpio !== 'undefined') {
-                        //this.links[uuid] = new GpioFaucetAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cFaucetAccessory(this, accessory, device);
-                    }
+                    this.links[uuid] = new accessory_1.DefaultOutputAccessory(this, accessory, device, 'Faucet', {
+                        Active: 0,
+                    });
                     break;
                 case 'valve':
-                    if (typeof device.gpio !== 'undefined') {
-                        //this.links[uuid] = new GpioFaucetAccessory(this, accessory, device);
-                    }
-                    else if (typeof device.i2cAddress !== 'undefined') {
-                        this.links[uuid] = new accessory_1.I2cValveAccessory(this, accessory, device);
-                    }
+                    this.links[uuid] = new accessory_1.ValveAccessory(this, accessory, device);
                     break;
+                // Input
+                case 'button':
+                    this.links[uuid] = new accessory_1.ButtonAccessory(this, accessory, device);
+                    break;
+                case 'contact':
+                    this.links[uuid] = new accessory_1.ContactSensorAccessory(this, accessory, device);
+                    break;
+                case 'motion':
+                    this.links[uuid] = new accessory_1.MotionSensorAccessory(this, accessory, device);
+                    break;
+                case 'occupancy':
+                    this.links[uuid] = new accessory_1.OccupancySensorAccessory(this, accessory, device);
+                    break;
+                // Others
+                case 'garage_door':
+                    this.links[uuid] = new accessory_1.GarageDoorAccessory(this, accessory, device);
+                    break;
+                case 'fan':
+                    this.links[uuid] = new accessory_1.FanAccessory(this, accessory, device);
+                    break;
+                case 'speaker':
+                    this.links[uuid] = new accessory_1.SpeakerAccessory(this, accessory, device);
+                    break;
+                case 'rgb':
+                    this.links[uuid] = new accessory_1.LightRgbAccessory(this, accessory, device);
+                    break;
+                // Alarm
                 case 'alarm':
-                    if (typeof device.gpio !== 'undefined') {
-                        this.links[uuid] = new accessory_1.SecuritySystemAccessory(this, accessory, device);
-                        this.alarm = this.links[uuid];
-                    }
+                    this.links[uuid] = new accessory_1.SecuritySystemAccessory(this, accessory, device);
+                    this.alarm = this.links[uuid];
                     break;
+                // Error
                 default:
                     this.log.error(`Device type ${device.type} not supported`);
             }
         }
+    }
+    generateUuid(device) {
+        let name = device.type;
+        if (typeof device.gpio !== 'undefined') {
+            name = name + '_gpio_' + device.gpio;
+        }
+        else if (typeof device.i2cAddress !== 'undefined') {
+            name = name + '_i2c_' + device.i2cAddress + '_' + device.i2cBit;
+        }
+        return this.api.hap.uuid.generate(name);
     }
     bin2dec(v) {
         return parseInt((v + '').replace(/[^01]/gi, ''), 2);
@@ -222,9 +211,8 @@ class EsjRPi {
                 this.i2cHandles[address] = await this.pigpio.i2cOpen(1, address);
                 let value = await this.pigpio.i2cReadDevice(this.i2cHandles[address], 1);
                 value = this.dec2bin(value[1], len);
-                let arr = String(value).split('');
-                arr.reverse();
-                this.i2cDevices[address] = arr;
+                const arr = String(value).split('');
+                this.i2cDevices[address] = arr.reverse();
                 this.log.info('Start I2C device:', JSON.stringify(this.i2cDevices));
             }
         }
@@ -239,9 +227,9 @@ class EsjRPi {
         this.i2cDevices[address][bit - 1] = value;
     }
     async i2cApply(address) {
-        let arr = JSON.parse(JSON.stringify(this.i2cDevices[address]));
-        arr.reverse();
-        const bit = arr.join('');
+        const arr = JSON.parse(JSON.stringify(this.i2cDevices[address]));
+        //arr.reverse();
+        const bit = arr.reverse().join('');
         this.log.debug('I2C(' + address + '):', bit, this.bin2dec(bit));
         try {
             await this.pigpio.i2cWriteDevice(this.i2cHandles[address], [this.bin2dec(bit)]);

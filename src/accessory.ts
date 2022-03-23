@@ -2,7 +2,7 @@ import {Service, PlatformAccessory, CharacteristicValue} from 'homebridge';
 
 import { EsjRPi } from './platform';
 
-const TWEEN = require('@tweenjs/tween.js')
+import TWEEN from '@tweenjs/tween.js';
 
 setInterval(() => {
   TWEEN.update();
@@ -22,8 +22,8 @@ abstract class Accessory {
       protected characteristic,
   ) {
 
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-        .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
+    this.accessory.getService(this.platform.Service.AccessoryInformation)
+        ?.setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
         .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
         .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
 
@@ -43,7 +43,7 @@ abstract class Accessory {
 
     if (typeof this.config.alarm !== 'undefined' && typeof this.platform.alarm !== 'undefined') {
 
-      let trigger = new ConfigAlarmTrigger();
+      const trigger = new ConfigAlarmTrigger();
 
       if (typeof this.config.alarm.home !== 'undefined') {
         trigger.home = this.config.alarm.home;
@@ -65,18 +65,16 @@ abstract class Accessory {
 
   startCharacteristic(key: string, value: CharacteristicValue) {
 
-    const me = this;
+    this.service.setCharacteristic(this.platform.Characteristic[key], value);
 
-    me.service.setCharacteristic(me.platform.Characteristic[key], value);
-
-    if (typeof me['set' + key] === 'function') {
-      me.service.getCharacteristic(me.platform.Characteristic[key])
-          .onSet(me['set' + key].bind(me));
+    if (typeof this['set' + key] === 'function') {
+      this.service.getCharacteristic(this.platform.Characteristic[key])
+          .onSet(this['set' + key].bind(this));
     }
 
-    if (typeof me['get' + key] === 'function') {
-      me.service.getCharacteristic(me.platform.Characteristic[key])
-          .onGet(me['get' + key].bind(me));
+    if (typeof this['get' + key] === 'function') {
+      this.service.getCharacteristic(this.platform.Characteristic[key])
+          .onGet(this['get' + key].bind(this));
     }
 
   }
@@ -131,6 +129,7 @@ abstract class OutputAccessory extends Accessory {
 
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
   async onChange(value: boolean) {}
 
   async output(value: boolean) {
@@ -265,6 +264,7 @@ export class ValveAccessory extends OutputAccessory {
 
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async onChange(value: boolean) {
 
     this.service.setCharacteristic(this.platform.Characteristic.InUse, this.characteristic.Active);
@@ -275,23 +275,21 @@ export class ValveAccessory extends OutputAccessory {
 
   startTimeout() {
 
-    const me = this;
-
-    if (me.timeout) {
-      clearTimeout(me.timeout);
+    if (this.timeout) {
+      clearTimeout(this.timeout);
     }
 
     if (this.characteristic.Active === 1 && this.characteristic.SetDuration > 0) {
 
-      me.startTime = Date.now();
+      this.startTime = Date.now();
 
       this.service.setCharacteristic(this.platform.Characteristic.RemainingDuration, this.characteristic.SetDuration);
 
-      me.timeout = setTimeout(() => {
-        me.setActive(0).then(() => {
-          me.service.setCharacteristic(this.platform.Characteristic.Active, 0);
+      this.timeout = setTimeout(() => {
+        this.setActive(0).then(() => {
+          this.service.setCharacteristic(this.platform.Characteristic.Active, 0);
         });
-      }, me.characteristic.SetDuration * 1000);
+      }, this.characteristic.SetDuration * 1000);
 
     } else {
 
@@ -394,15 +392,13 @@ export class SecuritySystemAccessory extends OutputAccessory {
 
   async setSecuritySystemTargetState(value: CharacteristicValue) {
 
-    const me = this;
+    this.characteristic.SecuritySystemTargetState = value as number;
 
-    me.characteristic.SecuritySystemTargetState = value as number;
+    if (this.characteristic.SecuritySystemTargetState != this.characteristic.SecuritySystemCurrentState) {
 
-    if (me.characteristic.SecuritySystemTargetState != me.characteristic.SecuritySystemCurrentState) {
+      this.platform.log.info('Estado Alterado...', this.stateName(this.characteristic.SecuritySystemTargetState));
 
-      me.platform.log.info('Estado Alterado...', me.stateName(me.characteristic.SecuritySystemTargetState));
-
-      me.startTimeoutState();
+      this.startTimeoutState();
 
     }
 
@@ -410,35 +406,31 @@ export class SecuritySystemAccessory extends OutputAccessory {
 
   changeState() {
 
-    const me = this;
-
-    me.characteristic.SecuritySystemCurrentState = me.characteristic.SecuritySystemTargetState;
-    me.platform.log.warn('Estado Alterado!', me.stateName(me.characteristic.SecuritySystemCurrentState));
-    me.service.setCharacteristic(me.platform.Characteristic.SecuritySystemCurrentState, me.characteristic.SecuritySystemCurrentState);
+    this.characteristic.SecuritySystemCurrentState = this.characteristic.SecuritySystemTargetState;
+    this.platform.log.warn('Estado Alterado!', this.stateName(this.characteristic.SecuritySystemCurrentState));
+    this.service.setCharacteristic(this.platform.Characteristic.SecuritySystemCurrentState, this.characteristic.SecuritySystemCurrentState);
 
   }
 
   startTimeoutState() {
 
-    const me = this;
-
-    if (me.timeoutState) {
-      clearTimeout(me.timeoutState);
+    if (this.timeoutState) {
+      clearTimeout(this.timeoutState);
     }
 
-    if (me.timeoutTrigger) {
-      clearTimeout(me.timeoutTrigger);
+    if (this.timeoutTrigger) {
+      clearTimeout(this.timeoutTrigger);
     }
 
-    if (me.characteristic.SecuritySystemTargetState == me.platform.Characteristic.SecuritySystemTargetState.DISARM) {
+    if (this.characteristic.SecuritySystemTargetState == this.platform.Characteristic.SecuritySystemTargetState.DISARM) {
 
-      me.changeState();
+      this.changeState();
 
     } else {
 
-      me.timeoutState = setTimeout(() => {
-        me.changeState();
-      }, me.time * 1000);
+      this.timeoutState = setTimeout(() => {
+        this.changeState();
+      }, this.time * 1000);
 
     }
 
@@ -446,37 +438,33 @@ export class SecuritySystemAccessory extends OutputAccessory {
 
   trigger(config: ConfigAlarmTrigger, name: string) {
 
-    const me = this;
-
     let detected = false;
 
-    if (config.home && me.characteristic.SecuritySystemCurrentState == me.platform.Characteristic.SecuritySystemCurrentState.STAY_ARM) {
+    if (config.home && this.characteristic.SecuritySystemCurrentState == this.platform.Characteristic.SecuritySystemCurrentState.STAY_ARM) {
       detected = true;
     }
 
-    if (config.away && me.characteristic.SecuritySystemCurrentState == me.platform.Characteristic.SecuritySystemCurrentState.AWAY_ARM) {
+    if (config.away && this.characteristic.SecuritySystemCurrentState == this.platform.Characteristic.SecuritySystemCurrentState.AWAY_ARM) {
       detected = true;
     }
 
-    if (config.night && me.characteristic.SecuritySystemCurrentState == me.platform.Characteristic.SecuritySystemCurrentState.NIGHT_ARM) {
+    if (config.night && this.characteristic.SecuritySystemCurrentState == this.platform.Characteristic.SecuritySystemCurrentState.NIGHT_ARM) {
       detected = true;
     }
 
     if (detected) {
-      me.platform.log.warn('Movimento Detectado!', name);
-      me.startTimeoutTrigger();
+      this.platform.log.warn('Movimento Detectado!', name);
+      this.startTimeoutTrigger();
     }
 
   }
 
   startTimeoutTrigger() {
 
-    const me = this;
-
-    me.timeoutTrigger = setTimeout(() => {
-      me.service.setCharacteristic(me.platform.Characteristic.SecuritySystemCurrentState, me.platform.Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED);
-      me.platform.log.error('Alarme Disparado!');
-    }, me.time * 1000);
+    this.timeoutTrigger = setTimeout(() => {
+      this.service.setCharacteristic(this.platform.Characteristic.SecuritySystemCurrentState, this.platform.Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED);
+      this.platform.log.error('Alarme Disparado!');
+    }, this.time * 1000);
 
   }
 
@@ -529,8 +517,6 @@ export class LightRgbAccessory extends Accessory {
 
   async init() {
 
-    const me = this;
-
     if (typeof this.config.gpioR !== 'undefined') {
 
       this.platform.log.debug(this.type + ' connected on GPIO:', this.config.gpioR, this.config.gpioG, this.config.gpioB);
@@ -565,28 +551,26 @@ export class LightRgbAccessory extends Accessory {
 
   startTween(h, s, b) {
 
-    const me = this;
-
-    if (typeof me.tween !== 'undefined') {
-      me.tween.stop();
+    if (typeof this.tween !== 'undefined') {
+      this.tween.stop();
     }
 
-    me.characteristic2.Hue = me.characteristic2.Hue % 360;
+    this.characteristic2.Hue = this.characteristic2.Hue % 360;
 
-    if (Math.abs(h - me.characteristic2.Hue) > 180) {
+    if (Math.abs(h - this.characteristic2.Hue) > 180) {
 
-      if (h > me.characteristic2.Hue) {
-        me.characteristic2.Hue += 360;
+      if (h > this.characteristic2.Hue) {
+        this.characteristic2.Hue += 360;
       } else {
         h += 360;
       }
 
     }
 
-    me.tween = new TWEEN.Tween(me.characteristic2)
+    this.tween = new TWEEN.Tween(this.characteristic2)
         .easing(TWEEN.Easing.Quadratic.InOut)
         .onUpdate(() => {
-          me.output();
+          this.output();
         })
         .to({Hue: h, Saturation: s, Brightness: b}, 500)
         .start();
@@ -683,7 +667,7 @@ export class LightRgbAccessory extends Accessory {
 
       if (this.characteristic2.Brightness > 0) {
 
-        let rgb = this.rgbFromHSV(this.characteristic2.Hue % 360, this.characteristic2.Saturation / 100, this.characteristic2.Brightness / 100);
+        const rgb = this.rgbFromHSV(this.characteristic2.Hue % 360, this.characteristic2.Saturation / 100, this.characteristic2.Brightness / 100);
 
         this.gpioR.analogWrite(rgb[0]);
         this.gpioG.analogWrite(rgb[1]);
@@ -747,11 +731,10 @@ abstract class InputAccessory extends Accessory {
 
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
   async onChange(level, tick) {}
 
   async init() {
-
-    const me = this;
 
     if (typeof this.config.gpio !== 'undefined') {
 
@@ -770,7 +753,7 @@ abstract class InputAccessory extends Accessory {
 
         }
 
-        me.onChange(level, tick);
+        this.onChange(level, tick);
 
       });
 
@@ -803,6 +786,11 @@ export class ButtonAccessory extends InputAccessory {
     super(platform, accessory, config, 'StatelessProgrammableSwitch', {
       ProgrammableSwitchEvent: null,
     });
+
+    if (typeof this.config.doublePressTime !== 'undefined') {
+      this.doublePressTime = this.config.doublePressTime;
+      this.platform.log.error('doublePressTime: ' + this.doublePressTime);
+    }
 
   }
 
@@ -1092,7 +1080,7 @@ export class GarageDoorAccessory extends InputAccessory {
 
       } else {
 
-        let time = (tick - this.tick) / 1000000;
+        const time = (tick - this.tick) / 1000000;
 
         this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
         this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.OPEN;
@@ -1133,7 +1121,7 @@ export class GarageDoorAccessory extends InputAccessory {
 
       } else {
 
-        let time = (tick - this.tick) / 1000000;
+        const time = (tick - this.tick) / 1000000;
 
         this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
         this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.CLOSED;

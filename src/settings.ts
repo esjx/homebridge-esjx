@@ -1,2 +1,2 @@
-export const PLATFORM_NAME = 'HomebridgeEsjRPi';
-export const PLUGIN_NAME = 'homebridge-esj-rpi';
+export const PLATFORM_NAME = 'HomebridgeESJx';
+export const PLUGIN_NAME = 'homebridge-esjx';
