@@ -23,7 +23,12 @@ import {
 
   GarageDoorAccessory,
 
-  SecuritySystemAccessory, SpeakerAccessory, LightRgbAccessory,
+  SecuritySystemAccessory,
+  SpeakerAccessory,
+  LightRgbAccessory,
+  LockMechanismAccessory,
+  TestAccessory,
+  AlarmTriggerAccessory,
 
 } from './accessory';
 
@@ -145,7 +150,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
         resolve(true);
 
       } catch (e) {
-        reject(e.message);
+        reject((e as Error).message);
       }
 
     });
@@ -293,11 +298,23 @@ export class EsjRPi implements DynamicPlatformPlugin {
           this.links[uuid] = new LightRgbAccessory(this, accessory, device);
           break;
 
+        case 'test':
+          this.links[uuid] = new TestAccessory(this, accessory, device);
+          break;
+
+        case 'lock':
+          this.links[uuid] = new LockMechanismAccessory(this, accessory, device);
+          break;
+
         // Alarm
 
         case 'alarm':
           this.links[uuid] = new SecuritySystemAccessory(this, accessory, device);
           this.alarm = this.links[uuid];
+          break;
+
+        case 'alarm_trigger':
+          this.links[uuid] = new AlarmTriggerAccessory(this, accessory, device);
           break;
 
         // Error
@@ -315,10 +332,14 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
     let name = device.type;
 
-    if (typeof device.gpio !== 'undefined') {
+    if (typeof device.gpioR !== 'undefined') {
+      name = name + '_gpioRGB_' + device.gpioR;
+    } else if (typeof device.gpio !== 'undefined') {
       name = name + '_gpio_' + device.gpio;
     } else if (typeof device.i2cAddress !== 'undefined') {
       name = name + '_i2c_' + device.i2cAddress + '_' + device.i2cBit;
+    } else if (typeof device.id !== 'undefined') {
+      name = name + '_id_' + device.id;
     }
 
     return this.api.hap.uuid.generate(name);
@@ -362,7 +383,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
       }
 
     } catch (e) {
-      this.log.error(e.message);
+      this.log.error((e as Error).message);
     }
 
   }
@@ -394,7 +415,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
       await this.pigpio.i2cWriteDevice(this.i2cHandles[address], [this.bin2dec(bit)]);
 
     } catch (e) {
-      this.log.error(e.message);
+      this.log.error((e as Error).message);
     }
 
   }

@@ -484,6 +484,49 @@ export class SecuritySystemAccessory extends OutputAccessory {
 
 }
 
+export class AlarmTriggerAccessory extends Accessory {
+
+  timeout;
+
+  constructor(
+      protected readonly platform: EsjRPi,
+      protected readonly accessory: PlatformAccessory,
+      protected config,
+  ) {
+
+    super(platform, accessory, config, 'Switch', {
+      On: false,
+    });
+
+  }
+
+  async setOn(value: CharacteristicValue) {
+
+    this.characteristic.On = value as boolean;
+
+    clearTimeout(this.timeout);
+
+    if (this.characteristic.On) {
+
+      this.triggerAlarm();
+
+      this.timeout = setTimeout(() => {
+        this.characteristic.On = false;
+        this.service.setCharacteristic(this.platform.Characteristic.On, this.characteristic.On);
+      }, 3000);
+
+    }
+
+  }
+
+  async getOn(): Promise<CharacteristicValue> {
+
+    return this.characteristic.On;
+
+  }
+
+}
+
 export class LightRgbAccessory extends Accessory {
 
   protected gpioR;
@@ -710,6 +753,16 @@ export class LightRgbAccessory extends Accessory {
 
   }
 
+  async toggle(): Promise<CharacteristicValue> {
+
+    await this.setOn(!this.characteristic.On);
+
+    this.service.setCharacteristic(this.platform.Characteristic.On, this.characteristic.On);
+
+    return this.characteristic.On;
+
+  }
+
 }
 
 /* Acessórios de entrada (GPIO) */
@@ -774,7 +827,7 @@ export class ButtonAccessory extends InputAccessory {
   private pressedTick;
 
   private singlePressTimeout;
-  private doublePressTime = 500;
+  private doublePressTime = 400;
   private longPressTime = 800;
 
   constructor(
@@ -787,9 +840,8 @@ export class ButtonAccessory extends InputAccessory {
       ProgrammableSwitchEvent: null,
     });
 
-    if (typeof this.config.doublePressTime !== 'undefined') {
-      this.doublePressTime = this.config.doublePressTime;
-      this.platform.log.error('doublePressTime: ' + this.doublePressTime);
+    if (typeof this.config.double === 'undefined') {
+      this.doublePressTime = 50;
     }
 
   }
@@ -996,12 +1048,14 @@ export class GarageDoorAccessory extends InputAccessory {
     super(platform, accessory, config, 'GarageDoorOpener', {
       CurrentDoorState: 1,
       TargetDoorState: 1,
+      LockCurrentState: 1,
+      LockTargetState: 1,
       ObstructionDetected: false,
     });
 
     this.accessory.category = this.platform.api.hap.Categories.GARAGE_DOOR_OPENER;
 
-    this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+    //this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
   }
 
@@ -1021,6 +1075,22 @@ export class GarageDoorAccessory extends InputAccessory {
 
   }
 
+  async getLockCurrentState(): Promise<CharacteristicValue> {
+
+    this.platform.log.debug('Get Characteristic LockCurrentState ->', this.characteristic.LockCurrentState);
+
+    return this.characteristic.LockCurrentState;
+
+  }
+
+  async getLockTargetState(): Promise<CharacteristicValue> {
+
+    this.platform.log.debug('Get Characteristic LockTargetState ->', this.characteristic.LockTargetState);
+
+    return this.characteristic.LockTargetState;
+
+  }
+
   async setTargetDoorState(value: CharacteristicValue) {
 
     this.characteristic.TargetDoorState = value as number;
@@ -1036,6 +1106,12 @@ export class GarageDoorAccessory extends InputAccessory {
     }
 
     this.detected = false;
+
+  }
+
+  async setLockTargetState(value: CharacteristicValue) {
+
+    this.characteristic.LockTargetState = value as number;
 
   }
 
@@ -1084,9 +1160,13 @@ export class GarageDoorAccessory extends InputAccessory {
 
         this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
         this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.OPEN;
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
 
         this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.OPEN);
         this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.OPEN);
+        this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+        this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
 
         this.platform.log.info('Open!', Math.round(time * 10) / 10, 'seconds');
 
@@ -1125,9 +1205,13 @@ export class GarageDoorAccessory extends InputAccessory {
 
         this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
         this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.CLOSED;
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
 
         this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.CLOSED);
         this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.CLOSED);
+        this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+        this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.SECURED);
 
         this.platform.log.info('Closed!', Math.round(time * 10) / 10, 'seconds');
 
@@ -1168,7 +1252,7 @@ export class FanAccessory extends OutputAccessory {
     super(platform, accessory, config, 'Fan', {
       On: false,
       RotationDirection: 0,
-      RotationSpeed: 35,
+      RotationSpeed: 30,
     });
 
     this.service.getCharacteristic(this.platform.Characteristic.RotationSpeed).setProps({
@@ -1314,6 +1398,180 @@ export class SpeakerAccessory extends Accessory {
   async setVolume(value: CharacteristicValue) {
 
     this.characteristic.Volume = value as number;
+
+  }
+
+}
+
+export class TestAccessory extends InputAccessory {
+
+  constructor(
+      protected readonly platform: EsjRPi,
+      protected readonly accessory: PlatformAccessory,
+      protected config,
+  ) {
+
+    super(platform, accessory, config, 'Doorbell', {
+      ProgrammableSwitchEvent: null,
+      Mute: false,
+      Volume: 30,
+    });
+
+    //this.accessory.category = this.platform.api.hap.Categories.DO;
+
+  }
+
+  getProgrammableSwitchEvent() {
+
+    return null;
+
+  }
+
+  async getMute(): Promise<CharacteristicValue> {
+
+    return this.characteristic.Mute;
+
+  }
+
+  async getVolume(): Promise<CharacteristicValue> {
+
+    return this.characteristic.Volume;
+
+  }
+
+  async setMute(value: CharacteristicValue) {
+
+    this.characteristic.Mute = value as boolean;
+
+  }
+
+  async setVolume(value: CharacteristicValue) {
+
+    this.characteristic.Volume = value as number;
+
+  }
+
+}
+
+export class LockMechanismAccessory extends InputAccessory {
+
+  protected gpioOpen;
+
+  private pulse = 500;
+
+  constructor(
+      protected readonly platform: EsjRPi,
+      protected readonly accessory: PlatformAccessory,
+      protected config,
+  ) {
+
+    super(platform, accessory, config, 'LockMechanism', {
+      LockCurrentState: 1,
+      LockTargetState: 1,
+    });
+
+  }
+
+  async getLockCurrentState(): Promise<CharacteristicValue> {
+
+    this.platform.log.debug('Get Characteristic LockCurrentState ->', this.characteristic.LockCurrentState);
+
+    return this.characteristic.LockCurrentState;
+
+  }
+
+  async getLockTargetState(): Promise<CharacteristicValue> {
+
+    this.platform.log.debug('Get Characteristic LockTargetState ->', this.characteristic.LockTargetState);
+
+    return this.characteristic.LockTargetState;
+
+  }
+
+  async setLockTargetState(value: CharacteristicValue) {
+
+    this.characteristic.LockTargetState = value as number;
+
+    if (value == this.platform.Characteristic.LockCurrentState.UNSECURED) {
+
+      this.platform.log.warn('Destrancando!!!');
+
+      await this.gpio.write(0);
+      await this.wait(this.pulse);
+      await this.gpio.write(1);
+
+      this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+      this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+
+    } else {
+
+      this.platform.log.warn('Trancando!!!');
+
+      await this.wait(this.pulse);
+
+      this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+      this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+
+    }
+
+  }
+
+  async init() {
+
+    this.platform.log.debug(this.type + ' connected on GPIO:', this.config.gpio);
+
+    this.gpio = this.platform.pigpio.gpio(this.config.gpio);
+    await this.gpio.modeSet('output');
+    await this.gpio.pullUpDown(this.config.pullUpDown);
+
+    this.gpioOpen = this.platform.pigpio.gpio(this.config.gpioOpen);
+    await this.gpioOpen.modeSet('input');
+    await this.gpioOpen.pullUpDown(this.config.pullUpDown);
+    await this.gpioOpen.glitchSet(this.glitchTime * 1000);
+
+    this.gpioOpen.notify((level, tick)=> {
+
+      this.platform.log.debug(`Lock changed to ${level} at ${tick} usec`);
+
+      if (level == 1) {
+
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+        this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
+
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+        this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+
+      } else {
+
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
+        this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.SECURED);
+
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+        this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+
+      }
+
+    });
+
+    const valueOpen = await this.gpioOpen.read();
+
+    if (valueOpen == 1) {
+
+      this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+
+    } else {
+
+      this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+
+    }
+
+    Object.entries(this.characteristic).forEach(([key, value]) => {
+      if (value !== null && typeof this['set' + key] === 'function') {
+        this['set' + key](value);
+      }
+    });
+
+    this.initialized = true;
 
   }
 
