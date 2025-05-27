@@ -10,7 +10,7 @@
     "url": "git://github.com/esjx/homebrigde-esjx.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/esjx/homebridge-esjx/issues"
   },
   "engines": {
     "node": ">=10.17.0",
