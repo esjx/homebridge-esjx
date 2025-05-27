@@ -28,7 +28,7 @@ import {
   LightRgbAccessory,
   LockMechanismAccessory,
   TestAccessory,
-  AlarmTriggerAccessory,
+  AlarmTriggerAccessory, DimmerAccessory,
 
 } from './accessory';
 
@@ -161,6 +161,8 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
     this.log.warn('Initializing all Accessories');
 
+    this.log.warn(this.api.user.storagePath());
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     Object.entries(this.links).forEach(([key, value]) => {
 
@@ -262,6 +264,10 @@ export class EsjRPi implements DynamicPlatformPlugin {
           this.links[uuid] = new ValveAccessory(this, accessory, device);
           break;
 
+        case 'dimmer':
+          this.links[uuid] = new DimmerAccessory(this, accessory, device);
+          break;
+
         // Input
 
         case 'button':
@@ -337,7 +343,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
     } else if (typeof device.gpio !== 'undefined') {
       name = name + '_gpio_' + device.gpio;
     } else if (typeof device.i2cAddress !== 'undefined') {
-      name = name + '_i2c_' + device.i2cAddress + '_' + device.i2cBit;
+      name = name + '_i2c_' + device.i2cAddress + '_' + (device.i2cBit ?? device.i2cChannel);
     } else if (typeof device.id !== 'undefined') {
       name = name + '_id_' + device.id;
     }
@@ -388,6 +394,24 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
   }
 
+  async startI2cDeviceDimmer(address) {
+
+    try {
+
+      if (typeof this.i2cHandles[address] === 'undefined') {
+
+        this.i2cHandles[address] = await this.pigpio.i2cOpen(1, address);
+
+        this.log.info('Start I2C device:', address);
+
+      }
+
+    } catch (e) {
+      this.log.error((e as Error).message);
+    }
+
+  }
+
   async i2cWriteBit(address, bit, v) {
 
     const value = (v) ? 1 : 0;
@@ -417,6 +441,65 @@ export class EsjRPi implements DynamicPlatformPlugin {
     } catch (e) {
       this.log.error((e as Error).message);
     }
+
+  }
+
+  async i2cWriteDevice(address, data) {
+
+    await this.startI2cDeviceDimmer(address);
+
+    this.log.debug('I2C(' + address + '):', data);
+
+    try {
+
+      await this.pigpio.i2cWriteDevice(this.i2cHandles[address], data);
+
+    } catch (e) {
+      this.log.error((e as Error).message);
+    }
+
+  }
+
+  limit(value: number, min: number, max: number): number
+  {
+
+    if (min < max) {
+
+      if (value < min) {
+        return min;
+      }
+
+      if (value > max) {
+        return max;
+      }
+
+    } else {
+
+      if (value < max) {
+        return max;
+      }
+
+      if (value > min) {
+        return min;
+      }
+
+    }
+
+    return value;
+
+  }
+
+
+  doubleRuler(value: number, min: number, max: number, min2: number, max2: number, _limit = true): number
+  {
+
+    let out = ((value - min) * (max2 - min2)) / (max - min) + min2;
+
+    if (_limit) {
+      out = this.limit(out, min2, max2);
+    }
+
+    return out;
 
   }
 

@@ -41,6 +41,8 @@ abstract class Accessory {
 
   triggerAlarm() {
 
+    this.platform.log.warn('Teste');
+
     if (typeof this.config.alarm !== 'undefined' && typeof this.platform.alarm !== 'undefined') {
 
       const trigger = new ConfigAlarmTrigger();
@@ -504,6 +506,8 @@ export class AlarmTriggerAccessory extends Accessory {
 
     this.characteristic.On = value as boolean;
 
+    this.platform.log.warn('Botão pressionado');
+
     clearTimeout(this.timeout);
 
     if (this.characteristic.On) {
@@ -750,6 +754,147 @@ export class LightRgbAccessory extends Accessory {
     b = Math.round( (b + m)* 255);
 
     return [r, g, b]
+
+  }
+
+  async toggle(): Promise<CharacteristicValue> {
+
+    await this.setOn(!this.characteristic.On);
+
+    this.service.setCharacteristic(this.platform.Characteristic.On, this.characteristic.On);
+
+    return this.characteristic.On;
+
+  }
+
+}
+
+export class DimmerAccessory extends Accessory {
+
+  protected tween;
+
+  protected characteristic2;
+
+  constructor(
+      protected readonly platform: EsjRPi,
+      protected readonly accessory: PlatformAccessory,
+      protected config,
+  ) {
+
+    super(platform, accessory, config, 'Lightbulb', {
+      On: false,
+      Brightness: 100,
+    });
+
+    this.characteristic2 = {
+      Brightness: 100,
+    };
+
+  }
+
+  async init() {
+
+    if (typeof this.config.i2cAddress === 'undefined' || typeof this.config.i2cChannel === 'undefined') {
+
+      this.platform.log.error('Error', this.type, this.config);
+
+    }
+
+    Object.entries(this.characteristic).forEach(([key, value]) => {
+      if (value !== null && typeof this['set' + key] === 'function') {
+        this['set' + key](value);
+      }
+    });
+
+    this.initialized = true;
+
+  }
+
+  startTween(b) {
+
+    if (typeof this.tween !== 'undefined') {
+      this.tween.stop();
+    }
+
+    this.tween = new TWEEN.Tween(this.characteristic2)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .onUpdate(() => {
+          this.output();
+        })
+        .to({Brightness: b}, 500)
+        .start();
+
+  }
+
+  async setOn(value: CharacteristicValue) {
+
+    if (value !== this.characteristic.On) {
+
+      this.characteristic.On = value as boolean;
+
+      this.platform.log.debug('Set Characteristic On ->', value);
+
+      if (value) {
+        this.characteristic2.Brightness = 0;
+      }
+
+      this.startTween((this.characteristic.On) ? this.characteristic.Brightness : 0);
+
+    }
+
+  }
+
+  async getOn(): Promise<CharacteristicValue> {
+
+    return this.characteristic.On;
+
+  }
+
+  async setBrightness(value: CharacteristicValue) {
+
+    if (value !== this.characteristic.Brightness) {
+
+      this.characteristic.Brightness = value as number;
+
+      this.platform.log.debug('Set Characteristic Brightness ->', value);
+
+      this.startTween((this.characteristic.On) ? this.characteristic.Brightness : 0);
+
+    }
+
+  }
+
+  async getBrightness(): Promise<CharacteristicValue> {
+
+    return this.characteristic.Brightness;
+
+  }
+
+  protected anterior;
+
+  async output() {
+
+    if (typeof this.config.i2cAddress !== 'undefined' && typeof this.config.i2cChannel !== 'undefined') {
+
+      const valor = parseInt(this.characteristic2.Brightness);
+
+      let gravar = 100;
+
+      if (valor > 0) {
+
+        gravar = Math.round(this.platform.doubleRuler(valor, 0, 100, 70, 0));
+
+      }
+
+      if (gravar != this.anterior) {
+
+        this.anterior = gravar;
+
+        await this.platform.i2cWriteDevice(this.config.i2cAddress, [this.config.i2cChannel, gravar]);
+
+      }
+
+    }
 
   }
 
@@ -1097,7 +1242,7 @@ export class GarageDoorAccessory extends InputAccessory {
 
     if (!this.detected) {
 
-      this.platform.log.error('Acionando botoeira!!!');
+      this.platform.log.info('Acionando botoeira!!!');
 
       await this.gpio.write(0);
       await this.wait(this.pulse);
@@ -1467,7 +1612,7 @@ export class LockMechanismAccessory extends InputAccessory {
 
     super(platform, accessory, config, 'LockMechanism', {
       LockCurrentState: 1,
-      LockTargetState: 1,
+      LockTargetState: 1
     });
 
   }
