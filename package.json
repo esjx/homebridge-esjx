@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "ESJx Raspberry Pi",
   "name": "homebridge-esjx",
   "version": "1.0.3-beta.0",
