@@ -41,8 +41,6 @@ abstract class Accessory {
 
     triggerAlarm() {
 
-        this.platform.log.warn('Teste');
-
         if (typeof this.config.alarm !== 'undefined' && typeof this.platform.alarm !== 'undefined') {
 
             const trigger = new ConfigAlarmTrigger();
@@ -109,8 +107,8 @@ abstract class OutputAccessory extends Accessory {
 
             this.gpio = this.platform.pigpio.gpio(this.config.gpio);
             await this.gpio.modeSet('output');
-            await this.gpio.pullUpDown(this.config.pullUpDown);
             await this.gpio.write(1);
+            await this.gpio.pullUpDown(this.config.pullUpDown);
 
         } else if (typeof this.config.i2cAddress !== 'undefined' && typeof this.config.i2cBit !== 'undefined') {
 
@@ -916,7 +914,7 @@ export class DimmerAccessory extends Accessory {
 abstract class InputAccessory extends Accessory {
 
     protected gpio;
-    protected glitchTime = 10;
+    protected glitchTime = 1;
 
     protected constructor(
         protected readonly platform: EsjRPi,
@@ -1275,6 +1273,7 @@ export class GarageDoorAccessory extends InputAccessory {
 
         this.gpio = this.platform.pigpio.gpio(this.config.gpio);
         await this.gpio.modeSet('output');
+        await this.gpio.write(1);
         await this.gpio.pullUpDown(this.config.pullUpDown);
 
         this.gpioOpen = this.platform.pigpio.gpio(this.config.gpioOpen);
@@ -1292,11 +1291,11 @@ export class GarageDoorAccessory extends InputAccessory {
 
                 this.tick = tick;
 
-                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
                 this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.CLOSING;
+                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
 
-                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.CLOSED);
                 this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.CLOSING);
+                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.CLOSED);
 
                 this.platform.log.info('Closing...');
 
@@ -1304,15 +1303,15 @@ export class GarageDoorAccessory extends InputAccessory {
 
                 const time = (tick - this.tick) / 1000000;
 
-                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
                 this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.OPEN;
-                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-                this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
+                //this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+                //this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
 
-                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.OPEN);
                 this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.OPEN);
-                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
-                this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
+                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.OPEN);
+                //this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
+                //this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
                 this.platform.log.info('Open!', Math.round(time * 10) / 10, 'seconds');
 
@@ -1335,11 +1334,11 @@ export class GarageDoorAccessory extends InputAccessory {
 
                 this.tick = tick;
 
-                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
                 this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.OPENING;
+                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.OPEN;
 
-                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.OPEN);
                 this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.OPENING);
+                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.OPEN);
 
                 this.triggerAlarm();
 
@@ -1349,15 +1348,15 @@ export class GarageDoorAccessory extends InputAccessory {
 
                 const time = (tick - this.tick) / 1000000;
 
-                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
                 this.characteristic.CurrentDoorState = this.platform.Characteristic.CurrentDoorState.CLOSED;
-                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
-                this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
+                this.characteristic.TargetDoorState = this.platform.Characteristic.TargetDoorState.CLOSED;
+                //this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
+                //this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
 
-                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.CLOSED);
                 this.service.setCharacteristic(this.platform.Characteristic.CurrentDoorState, this.platform.Characteristic.CurrentDoorState.CLOSED);
-                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
-                this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.SECURED);
+                this.service.setCharacteristic(this.platform.Characteristic.TargetDoorState, this.platform.Characteristic.TargetDoorState.CLOSED);
+                //this.service.setCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.SECURED);
+                //this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
 
                 this.platform.log.info('Closed!', Math.round(time * 10) / 10, 'seconds');
 
@@ -1603,6 +1602,8 @@ export class LockMechanismAccessory extends InputAccessory {
 
     protected gpioOpen;
 
+    protected detected = true;
+
     private pulse = 500;
 
     constructor(
@@ -1638,31 +1639,37 @@ export class LockMechanismAccessory extends InputAccessory {
 
         this.characteristic.LockTargetState = value as number;
 
-        if (value == this.platform.Characteristic.LockCurrentState.UNSECURED) {
+        if (!this.detected) {
 
-            this.platform.log.warn('Destrancando!!!');
+            if (value == this.platform.Characteristic.LockCurrentState.UNSECURED) {
 
-            await this.gpio.write(0);
-            await this.wait(this.pulse);
-            await this.gpio.write(1);
+                this.platform.log.warn('Destrancando!!!');
 
-            this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-            this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+                await this.gpio.write(0);
+                await this.wait(this.pulse);
+                await this.gpio.write(1);
 
-        } else {
+                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
-            this.platform.log.warn('Trancando!!!');
+            } else {
 
-            await this.wait(this.pulse);
+                this.platform.log.warn('Trancando!!!');
 
-            this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
-            this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+                await this.wait(this.pulse);
 
-            setTimeout(() => {
-                this.refresh();
-            }, 100);
+                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+
+                setTimeout(() => {
+                    this.refresh();
+                }, 100);
+
+            }
 
         }
+
+        this.detected = false;
 
     }
 
@@ -1688,15 +1695,17 @@ export class LockMechanismAccessory extends InputAccessory {
 
         this.gpio = this.platform.pigpio.gpio(this.config.gpio);
         await this.gpio.modeSet('output');
-        await this.gpio.pullUpDown(this.config.pullUpDown ?? 2);
         await this.gpio.write(1);
+        await this.gpio.pullUpDown(this.config.pullUpDown ?? 2);
 
         this.gpioOpen = this.platform.pigpio.gpio(this.config.gpioOpen);
         await this.gpioOpen.modeSet('input');
         await this.gpioOpen.pullUpDown(this.config.pullUpDown);
-        await this.gpioOpen.glitchSet(this.glitchTime * 1000);
+        await this.gpioOpen.glitchSet(this.glitchTime * 1000 * 10);
 
         this.gpioOpen.notify((level, tick)=> {
+
+            this.detected = true;
 
             this.platform.log.debug(`Lock changed to ${level} at ${tick} usec`);
 
