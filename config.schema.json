@@ -1,16 +1,54 @@
 {
-  "pluginAlias": "HomebridgeESJx",
-  "pluginType": "platform",
-  "singular": true,
-  "schema": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "ESJx"
-      }
+    "pluginAlias": "HomebridgeESJx",
+    "pluginType": "platform",
+    "singular": true,
+    "headerDisplay": "Header",
+    "footerDisplay": "Footer",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "title": "Name",
+                "type": "string",
+                "required": true,
+                "default": "ESJx"
+            },
+            "devices": {
+                "title": "Devices",
+                "description": "Devices that need to be checked if they're online or not. Either by IP or Mac address.",
+                "type": "array",
+                "required": true,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "displayName": {
+                            "title": "name",
+                            "type": "string",
+                            "required": true
+                        },
+                        "type": {
+                            "title": "tipo",
+                            "type": "string",
+                            "oneOf": [
+                                { "title": "light", "enum": ["light"] },
+                                { "title": "switch", "enum": ["switch"] },
+                                { "title": "outlet", "enum": ["outlet"] },
+                                { "title": "faucet", "enum": ["faucet"] },
+                                { "title": "valve", "enum": ["valve"] },
+                                { "title": "lock", "enum": ["lock"] }
+                            ],
+                            "required": true
+                        },
+                        "gpio": {
+                            "title": "GPIO",
+                            "type": "integer",
+                            "oneOf": [
+                                { "title": "GPIO 22", "enum": [22] }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
     }
-  }
 }

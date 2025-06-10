@@ -268,6 +268,10 @@ export class EsjRPi implements DynamicPlatformPlugin {
           this.links[uuid] = new DimmerAccessory(this, accessory, device);
           break;
 
+        case 'lock':
+          this.links[uuid] = new LockMechanismAccessory(this, accessory, device);
+          break;
+
         // Input
 
         case 'button':
@@ -306,10 +310,6 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
         case 'test':
           this.links[uuid] = new TestAccessory(this, accessory, device);
-          break;
-
-        case 'lock':
-          this.links[uuid] = new LockMechanismAccessory(this, accessory, device);
           break;
 
         // Alarm

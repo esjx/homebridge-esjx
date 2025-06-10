@@ -1598,7 +1598,7 @@ export class TestAccessory extends InputAccessory {
 
 }
 
-export class LockMechanismAccessory extends InputAccessory {
+export class LockMechanismAccessory extends OutputAccessory {
 
     protected gpioOpen;
 
@@ -1650,7 +1650,7 @@ export class LockMechanismAccessory extends InputAccessory {
                 await this.gpio.write(1);
 
                 this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+                this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
             } else {
 
@@ -1659,11 +1659,11 @@ export class LockMechanismAccessory extends InputAccessory {
                 await this.wait(this.pulse);
 
                 this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
-                this.service.setCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+                this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
 
-                setTimeout(() => {
+                /*setTimeout(() => {
                     this.refresh();
-                }, 100);
+                }, 100);*/
 
             }
 
@@ -1689,7 +1689,7 @@ export class LockMechanismAccessory extends InputAccessory {
 
     }
 
-    async init() {
+    /*async init() {
 
         this.platform.log.debug(this.type + ' connected on GPIO:', this.config.gpio);
 
@@ -1749,6 +1749,6 @@ export class LockMechanismAccessory extends InputAccessory {
 
         this.initialized = true;
 
-    }
+    }*/
 
 }
