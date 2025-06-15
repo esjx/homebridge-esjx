@@ -59,26 +59,24 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
         this.api.on(APIEvent.DID_FINISH_LAUNCHING, async () => {
 
-            let me = this;
-
             this.log.debug('Executed didFinishLaunching callback');
 
-            me.pigpio.once(EsjPiGPIOEvent.CONNECTED, (info) => {
-                me.log.debug(info);
-                me.initAccessories();
+            this.pigpio.once(EsjPiGPIOEvent.CONNECTED, (info) => {
+                this.log.debug(info);
+                this.initAccessories();
             });
 
-            me.pigpio.once(EsjPiGPIOEvent.ERROR, (error) => {
-                me.log.warn(error);
-                me.log.warn('App reconnecting in 1 sec');
+            this.pigpio.once(EsjPiGPIOEvent.ERROR, (error) => {
+                this.log.warn(error);
+                this.log.warn('App reconnecting in 1 sec');
             });
 
-            me.pigpio.once(EsjPiGPIOEvent.DISCONNECTED, (reason) => {
-                me.log.warn('App received disconnected event, reason:', reason);
-                me.log.warn('App reconnecting in 1 sec');
+            this.pigpio.once(EsjPiGPIOEvent.DISCONNECTED, (reason) => {
+                this.log.warn('App received disconnected event, reason:', reason);
+                this.log.warn('App reconnecting in 1 sec');
             });
 
-            me.pigpio.connect();
+            this.pigpio.connect();
 
             this.discoverDevices();
 
@@ -148,7 +146,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
             const uuid = this.generateUuid(device);
 
-            let virtual_device: Device = {
+            const virtual_device: Device = {
                 type: device.type + '_virtual_switch',
                 displayName: device.displayName,
                 gpio: device.gpio

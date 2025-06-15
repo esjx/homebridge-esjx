@@ -17,7 +17,7 @@ export declare const enum EsjPiGPIOState {
 export class EsjPiGPIO extends EventEmitter {
 
     public client: any;
-    public timeout: number = 1000;
+    public timeout = 1000;
 
     //private i2cHandles = {};
     //public i2cDevices = {};
@@ -28,43 +28,41 @@ export class EsjPiGPIO extends EventEmitter {
 
     public connect() {
 
-        const me = this;
+        this._handleConnect().then(() => {
 
-        me._handleConnect().then(() => {
+            this.client.once(EsjPiGPIOEvent.CONNECTED, async (info: any) => {
 
-            me.client.once(EsjPiGPIOEvent.CONNECTED, async (info: any) => {
-
-                me.emit(EsjPiGPIOEvent.CONNECTED, info);
+                this.emit(EsjPiGPIOEvent.CONNECTED, info);
 
             });
 
-            me.client.once(EsjPiGPIOEvent.ERROR, (error: any) => {
+            this.client.once(EsjPiGPIOEvent.ERROR, (error: any) => {
 
-                me.emit(EsjPiGPIOEvent.ERROR, error);
+                this.emit(EsjPiGPIOEvent.ERROR, error);
 
                 setTimeout(() => {
-                    me._handleConnect().then(() => {});
-                }, me.timeout);
+                    return this._handleConnect();
+                }, this.timeout);
 
             });
 
-            me.client.once(EsjPiGPIOEvent.DISCONNECTED, (reason: any) => {
+            this.client.once(EsjPiGPIOEvent.DISCONNECTED, (reason: any) => {
 
                 setTimeout(() => {
-                    me._handleConnect().then(() => {});
-                }, me.timeout);
+                    return this._handleConnect();
+                }, this.timeout);
 
-                me.emit(EsjPiGPIOEvent.DISCONNECTED, reason);
+                this.emit(EsjPiGPIOEvent.DISCONNECTED, reason);
 
             });
 
         }).catch((error: any) => {
 
-            me.emit('error', error);
+            this.emit('error', error);
 
             setTimeout(() => {
-                me._handleConnect().then(() => {});
-            }, me.timeout);
+                return this._handleConnect();
+            }, this.timeout);
 
         });
 
@@ -72,7 +70,7 @@ export class EsjPiGPIO extends EventEmitter {
 
     private async _handleConnect(): Promise<boolean> {
 
-        const me = this;
+        //const me = this;
 
         //me.i2cHandles = {};
         //me.i2cDevices = {};
@@ -81,7 +79,7 @@ export class EsjPiGPIO extends EventEmitter {
 
             try {
 
-                me.client = pigpio.pigpio({host: this.host});
+                this.client = pigpio.pigpio({host: this.host});
                 resolve(true);
 
             } catch (e) {
@@ -103,12 +101,15 @@ export class EsjPiGPIO extends EventEmitter {
 export class EsjOutputGPIO extends EventEmitter {
 
     private handler: any;
+    protected initialized?: boolean;
 
     constructor(private pigpio: EsjPiGPIO, private gpio: number, private pullUpDown: number = 2) {
 
         super();
 
-        this.init().then(() => {});
+        this.init().then(() => {
+            this.initialized = true;
+        });
 
     }
 
@@ -132,12 +133,15 @@ export class EsjOutputGPIO extends EventEmitter {
 export class EsjInputGPIO extends EventEmitter {
 
     private handler: any;
+    protected initialized?: boolean;
 
     constructor(private pigpio: EsjPiGPIO, private gpio?: number, private pullUpDown: number = 2, private glitchTime: number = 1) {
 
         super();
 
-        this.init().then(() => {});
+        this.init().then(() => {
+            this.initialized = true;
+        });
 
     }
 
