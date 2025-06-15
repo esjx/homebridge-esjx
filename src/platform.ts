@@ -96,7 +96,7 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
         this.log.warn(this.api.user.storagePath());
 
-        Object.entries(this.links).forEach(([key]: [string, any]): void => {
+        Object.entries(this.links).forEach(([key]): void => {
 
             this.links[key].init();
 

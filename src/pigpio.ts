@@ -16,7 +16,7 @@ export declare const enum EsjPiGPIOState {
 
 export class EsjPiGPIO extends EventEmitter {
 
-    public client: any;
+    public client;
     public timeout = 1000;
 
     //private i2cHandles = {};
@@ -30,13 +30,13 @@ export class EsjPiGPIO extends EventEmitter {
 
         this._handleConnect().then(() => {
 
-            this.client.once(EsjPiGPIOEvent.CONNECTED, async (info: any) => {
+            this.client.once(EsjPiGPIOEvent.CONNECTED, async (info) => {
 
                 this.emit(EsjPiGPIOEvent.CONNECTED, info);
 
             });
 
-            this.client.once(EsjPiGPIOEvent.ERROR, (error: any) => {
+            this.client.once(EsjPiGPIOEvent.ERROR, (error) => {
 
                 this.emit(EsjPiGPIOEvent.ERROR, error);
 
@@ -46,7 +46,7 @@ export class EsjPiGPIO extends EventEmitter {
 
             });
 
-            this.client.once(EsjPiGPIOEvent.DISCONNECTED, (reason: any) => {
+            this.client.once(EsjPiGPIOEvent.DISCONNECTED, (reason) => {
 
                 setTimeout(() => {
                     return this._handleConnect();
@@ -56,7 +56,7 @@ export class EsjPiGPIO extends EventEmitter {
 
             });
 
-        }).catch((error: any) => {
+        }).catch((error) => {
 
             this.emit('error', error);
 
@@ -100,7 +100,7 @@ export class EsjPiGPIO extends EventEmitter {
 
 export class EsjOutputGPIO extends EventEmitter {
 
-    private handler: any;
+    private handler;
     protected initialized?: boolean;
 
     constructor(private pigpio: EsjPiGPIO, private gpio: number, private pullUpDown: number = 2) {
@@ -132,7 +132,7 @@ export class EsjOutputGPIO extends EventEmitter {
 
 export class EsjInputGPIO extends EventEmitter {
 
-    private handler: any;
+    private handler;
     protected initialized?: boolean;
 
     constructor(private pigpio: EsjPiGPIO, private gpio?: number, private pullUpDown: number = 2, private glitchTime: number = 1) {
