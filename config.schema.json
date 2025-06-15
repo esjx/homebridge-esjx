@@ -2,8 +2,8 @@
     "pluginAlias": "HomebridgeESJx",
     "pluginType": "platform",
     "singular": true,
-    "headerDisplay": "Header",
-    "footerDisplay": "Footer",
+    "headerDisplay": "",
+    "footerDisplay": "",
     "schema": {
         "type": "object",
         "properties": {
@@ -13,42 +13,261 @@
                 "required": true,
                 "default": "ESJx"
             },
+            "host": {
+                "title": "Host",
+                "type": "string",
+                "required": true,
+                "default": "localhost"
+            },
             "devices": {
                 "title": "Devices",
-                "description": "Devices that need to be checked if they're online or not. Either by IP or Mac address.",
+                "description": "",
                 "type": "array",
                 "required": true,
                 "items": {
                     "type": "object",
                     "properties": {
                         "displayName": {
-                            "title": "name",
+                            "title": "Name",
                             "type": "string",
                             "required": true
                         },
                         "type": {
-                            "title": "tipo",
+                            "title": "Type",
                             "type": "string",
                             "oneOf": [
-                                { "title": "light", "enum": ["light"] },
-                                { "title": "switch", "enum": ["switch"] },
-                                { "title": "outlet", "enum": ["outlet"] },
-                                { "title": "faucet", "enum": ["faucet"] },
-                                { "title": "valve", "enum": ["valve"] },
-                                { "title": "lock", "enum": ["lock"] }
+                                { "title": "Light", "enum": ["light"] },
+                                { "title": "Switch", "enum": ["switch"] },
+                                { "title": "Outlet", "enum": ["outlet"] },
+                                { "title": "Faucet", "enum": ["faucet"] },
+                                { "title": "Valve", "enum": ["valve"] },
+                                { "title": "Garage Door", "enum": ["garage_door"] },
+                                { "title": "Lock", "enum": ["lock"] },
+                                { "title": "Alarm", "enum": ["alarm"] },
+                                { "title": "Alarm Trigger", "enum": ["alarm_trigger"] },
+                                { "title": "Button", "enum": ["button"] },
+                                { "title": "Motion Sensor", "enum": ["motion"] },
+                                { "title": "Occupancy Sensor", "enum": ["occupancy"] },
+                                { "title": "Contact Sensor", "enum": ["contact"] }
                             ],
                             "required": true
+                        },
+                        "subtype": {
+                            "title": "Subtype",
+                            "type": "integer",
+                            "oneOf": [
+                                { "title": "GENERIC_VALVE", "enum": [0] },
+                                { "title": "IRRIGATION", "enum": [1] },
+                                { "title": "SHOWER_HEAD", "enum": [2] },
+                                { "title": "WATER_FAUCET", "enum": [3] }
+                            ],
+                            "required": false
+                        },
+                        "manufacturer": {
+                            "title": "Manufacturer",
+                            "type": "string",
+                            "required": false
+                        },
+                        "model": {
+                            "title": "Model",
+                            "type": "string",
+                            "required": false
+                        },
+                        "serial_number": {
+                            "title": "Serial Number",
+                            "type": "string",
+                            "required": false
+                        },
+                        "time": {
+                            "title": "Time",
+                            "type": "integer",
+                            "required": false
                         },
                         "gpio": {
                             "title": "GPIO",
                             "type": "integer",
                             "oneOf": [
-                                { "title": "GPIO 22", "enum": [22] }
+                                { "title": "GPIO 02 (SDA1)", "enum": [2] },
+                                { "title": "GPIO 03 (SCA1)", "enum": [3] },
+                                { "title": "GPIO 04", "enum": [4] },
+                                { "title": "GPIO 05", "enum": [5] },
+                                { "title": "GPIO 06", "enum": [6] },
+                                { "title": "GPIO 07 (SCE1)", "enum": [7] },
+                                { "title": "GPIO 08 (SCE0)", "enum": [8] },
+                                { "title": "GPIO 09 (MISO)", "enum": [9] },
+                                { "title": "GPIO 10 (MOSI)", "enum": [10] },
+                                { "title": "GPIO 11 (SCLK)", "enum": [11] },
+                                { "title": "GPIO 12 (PWM0)", "enum": [12] },
+                                { "title": "GPIO 13 (PWM1)", "enum": [13] },
+                                { "title": "GPIO 14 (TXD0)", "enum": [14] },
+                                { "title": "GPIO 15 (RXD0)", "enum": [15] },
+                                { "title": "GPIO 16", "enum": [16] },
+                                { "title": "GPIO 17", "enum": [17] },
+                                { "title": "GPIO 18", "enum": [18] },
+                                { "title": "GPIO 19 (PCMfs)", "enum": [19] },
+                                { "title": "GPIO 20 (PCMdin)", "enum": [20] },
+                                { "title": "GPIO 21 (PCMdout)", "enum": [21] },
+                                { "title": "GPIO 22", "enum": [22] },
+                                { "title": "GPIO 23", "enum": [23] },
+                                { "title": "GPIO 24", "enum": [24] },
+                                { "title": "GPIO 25", "enum": [25] },
+                                { "title": "GPIO 26", "enum": [26] },
+                                { "title": "GPIO 27", "enum": [27] }
                             ]
+                        },
+                        "gpioA": {
+                            "title": "GPIO A",
+                            "type": "integer",
+                            "oneOf": [
+                                { "title": "GPIO 02 (SDA1)", "enum": [2] },
+                                { "title": "GPIO 03 (SCA1)", "enum": [3] },
+                                { "title": "GPIO 04", "enum": [4] },
+                                { "title": "GPIO 05", "enum": [5] },
+                                { "title": "GPIO 06", "enum": [6] },
+                                { "title": "GPIO 07 (SCE1)", "enum": [7] },
+                                { "title": "GPIO 08 (SCE0)", "enum": [8] },
+                                { "title": "GPIO 09 (MISO)", "enum": [9] },
+                                { "title": "GPIO 10 (MOSI)", "enum": [10] },
+                                { "title": "GPIO 11 (SCLK)", "enum": [11] },
+                                { "title": "GPIO 12 (PWM0)", "enum": [12] },
+                                { "title": "GPIO 13 (PWM1)", "enum": [13] },
+                                { "title": "GPIO 14 (TXD0)", "enum": [14] },
+                                { "title": "GPIO 15 (RXD0)", "enum": [15] },
+                                { "title": "GPIO 16", "enum": [16] },
+                                { "title": "GPIO 17", "enum": [17] },
+                                { "title": "GPIO 18", "enum": [18] },
+                                { "title": "GPIO 19 (PCMfs)", "enum": [19] },
+                                { "title": "GPIO 20 (PCMdin)", "enum": [20] },
+                                { "title": "GPIO 21 (PCMdout)", "enum": [21] },
+                                { "title": "GPIO 22", "enum": [22] },
+                                { "title": "GPIO 23", "enum": [23] },
+                                { "title": "GPIO 24", "enum": [24] },
+                                { "title": "GPIO 25", "enum": [25] },
+                                { "title": "GPIO 26", "enum": [26] },
+                                { "title": "GPIO 27", "enum": [27] }
+                            ]
+                        },
+                        "gpioB": {
+                            "title": "GPIO B",
+                            "type": "integer",
+                            "oneOf": [
+                                { "title": "GPIO 02 (SDA1)", "enum": [2] },
+                                { "title": "GPIO 03 (SCA1)", "enum": [3] },
+                                { "title": "GPIO 04", "enum": [4] },
+                                { "title": "GPIO 05", "enum": [5] },
+                                { "title": "GPIO 06", "enum": [6] },
+                                { "title": "GPIO 07 (SCE1)", "enum": [7] },
+                                { "title": "GPIO 08 (SCE0)", "enum": [8] },
+                                { "title": "GPIO 09 (MISO)", "enum": [9] },
+                                { "title": "GPIO 10 (MOSI)", "enum": [10] },
+                                { "title": "GPIO 11 (SCLK)", "enum": [11] },
+                                { "title": "GPIO 12 (PWM0)", "enum": [12] },
+                                { "title": "GPIO 13 (PWM1)", "enum": [13] },
+                                { "title": "GPIO 14 (TXD0)", "enum": [14] },
+                                { "title": "GPIO 15 (RXD0)", "enum": [15] },
+                                { "title": "GPIO 16", "enum": [16] },
+                                { "title": "GPIO 17", "enum": [17] },
+                                { "title": "GPIO 18", "enum": [18] },
+                                { "title": "GPIO 19 (PCMfs)", "enum": [19] },
+                                { "title": "GPIO 20 (PCMdin)", "enum": [20] },
+                                { "title": "GPIO 21 (PCMdout)", "enum": [21] },
+                                { "title": "GPIO 22", "enum": [22] },
+                                { "title": "GPIO 23", "enum": [23] },
+                                { "title": "GPIO 24", "enum": [24] },
+                                { "title": "GPIO 25", "enum": [25] },
+                                { "title": "GPIO 26", "enum": [26] },
+                                { "title": "GPIO 27", "enum": [27] }
+                            ]
+                        },
+                        "alarm": {
+                            "title": "Alarm",
+                            "type": "object",
+                            "properties": {
+                                "home": {
+                                    "title": "Home",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "away": {
+                                    "title": "Away",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "night": {
+                                    "title": "Night",
+                                    "type": "boolean",
+                                    "default": false
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-    }
+    },
+    "layout": [
+        {
+            "type": "flex",
+            "flex-flow": "row wrap",
+            "items": [
+                "name",
+                "host"
+            ]
+        },
+        {
+            "key": "devices",
+            "type": "tabarray",
+            "title": "{{ value.displayName || 'New device' }}",
+            "items": [
+                {
+                    "key": "devices[]",
+                    "type": "flex",
+                    "flex-flow": "row wrap",
+                    "items": [
+                        "devices[].displayName",
+                        "devices[].type"
+                    ]
+                },
+                {
+                    "key": "devices[]",
+                    "type": "flex",
+                    "flex-flow": "row wrap",
+                    "items": [
+                        "devices[].time",
+                        "devices[].subtype"
+                    ]
+                },
+                {
+                    "key": "devices[]",
+                    "type": "flex",
+                    "flex-flow": "row wrap",
+                    "items": [
+                        "devices[].model",
+                        "devices[].manufacturer",
+                        "devices[].serial_number"
+                    ]
+                },
+                {
+                    "key": "devices[]",
+                    "type": "flex",
+                    "flex-flow": "row wrap",
+                    "items": [
+                        "devices[].gpio",
+                        "devices[].gpioA",
+                        "devices[].gpioB"
+                    ]
+                },
+                {
+                    "key": "devices[]",
+                    "type": "flex",
+                    "flex-flow": "row wrap",
+                    "items": [
+                        "devices[].alarm.home",
+                        "devices[].alarm.away",
+                        "devices[].alarm.night"
+                    ]
+                }
+            ]
+        }
+    ]
 }
