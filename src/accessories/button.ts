@@ -66,7 +66,7 @@ export class ButtonAccessory extends InputAccessory {
 
             if (timePressed >= this.longPressTime) {
 
-                clearTimeout(this.singlePressTimeout);
+                clearTimeout(this.singlePressTimeout as Timeout);
                 //this.singlePressTimeout = null;
                 this.platform.log.debug('Long');
 

@@ -179,7 +179,9 @@ export class AlarmTriggerAccessory extends Accessory {
 
         this.platform.log.warn('Button pressed!');
 
-        clearTimeout(this.timeout);
+        if (typeof this.timeout != undefined) {
+            clearTimeout(this.timeout as Timeout);
+        }
 
         if (this.characteristic.On) {
 
