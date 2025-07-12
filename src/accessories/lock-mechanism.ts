@@ -61,6 +61,8 @@ export class LockMechanismAccessory extends OutputAccessory {
 
             this.setUnsecured();
 
+            this.setTargetUnsecured();
+
         }
 
         // Close
@@ -71,6 +73,8 @@ export class LockMechanismAccessory extends OutputAccessory {
             this.unsecured = false;
 
             this.setSecured();
+
+            this.setTargetSecured();
 
         }
 
@@ -162,6 +166,13 @@ export class LockMechanismAccessory extends OutputAccessory {
 
         this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
         this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+
+    }
+
+    setTargetSecured() {
+
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
+        this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockCurrentState.SECURED);
 
     }
 
