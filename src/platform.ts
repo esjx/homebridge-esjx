@@ -11,7 +11,6 @@ import {LockMechanismAccessory} from "./accessories/lock-mechanism";
 import {MotionSensorAccessory} from "./accessories/motion";
 import {OccupancySensorAccessory} from "./accessories/occupancy";
 import {ButtonAccessory} from "./accessories/button";
-import {VirtualSwitch} from "./accessories/virtual-switch";
 
 export class EsjRPi implements DynamicPlatformPlugin {
 
@@ -146,14 +145,6 @@ export class EsjRPi implements DynamicPlatformPlugin {
 
             const uuid = this.generateUuid(device);
 
-            const virtual_device: Device = {
-                type: device.type + '_virtual_switch',
-                displayName: device.displayName,
-                gpio: device.gpio
-            };
-
-            const uuid2 = this.generateUuid(virtual_device);
-
             let accessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
             if (accessory) {
@@ -207,8 +198,6 @@ export class EsjRPi implements DynamicPlatformPlugin {
                 case 'lock':
 
                     this.links[uuid] = new LockMechanismAccessory(this, accessory, device);
-
-                    this.links[uuid2] = new VirtualSwitch(this, accessory, device, this.links[uuid]);
 
                     break;
 

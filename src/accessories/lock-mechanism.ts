@@ -2,13 +2,13 @@ import {OutputAccessory} from "./output";
 import {EsjRPi} from "../platform";
 import {CharacteristicValue, PlatformAccessory} from "homebridge";
 import {Device} from "../config";
-import {EsjInputGPIO, EsjPiGPIOState} from "../pigpio";
+import {EsjInputGPIO, EsjPiGPIOEvent, EsjPiGPIOState} from "../pigpio";
 
 export class LockMechanismAccessory extends OutputAccessory {
 
     protected gpioOpen?: EsjInputGPIO;
 
-    protected detected = true;
+    protected unsecured = true;
 
     protected pulse = 500;
     protected times = 3;
@@ -25,6 +25,54 @@ export class LockMechanismAccessory extends OutputAccessory {
         });
 
         this.pulse = config.time ?? this.pulse;
+
+    }
+
+    async init(): Promise<void> {
+
+        await super.init();
+
+        if (typeof this.config.gpioA !== 'undefined') {
+
+            this.platform.log.info(this.type + ' connected on GPIO:', this.config.gpioA);
+
+            this.gpioOpen = new EsjInputGPIO(this.platform.pigpio, this.config.gpioA);
+
+            this.gpioOpen.on(EsjPiGPIOEvent.CHANGE, (level: number) => {
+
+                if (level === EsjPiGPIOState.OFF) {
+                    this.triggerAlarm();
+                }
+
+                this.update(level);
+
+            });
+
+        }
+
+    }
+
+    update(level: number) {
+
+        // Open
+        if (level === EsjPiGPIOState.OFF) {
+
+            this.platform.log.info('Door Open');
+
+            this.setUnsecured();
+
+        }
+
+        // Close
+        else if (level === EsjPiGPIOState.ON) {
+
+            this.platform.log.info('Door Close');
+
+            this.unsecured = false;
+
+            this.setSecured();
+
+        }
 
     }
 
@@ -51,42 +99,44 @@ export class LockMechanismAccessory extends OutputAccessory {
 
         this.characteristic.LockTargetState = value as number;
 
-        if (!this.detected) {
+        if (value == this.platform.Characteristic.LockCurrentState.UNSECURED) {
 
-            if (value == this.platform.Characteristic.LockCurrentState.UNSECURED) {
+            this.platform.log.warn('Unlocking!!!');
 
-                this.platform.log.warn('Unlocking!!!');
+            if (this.gpio) {
 
-                if (this.gpio) {
+                for (let i = 0; i < this.times; i++) {
 
-                    for (let i = 0; i < this.times; i++) {
-
-                        await this.gpio.write(EsjPiGPIOState.ON);
-                        await this.wait(this.pulse);
-                        await this.gpio.write(EsjPiGPIOState.OFF);
-                        await this.wait(this.pulse);
-
-                    }
+                    await this.gpio.write(EsjPiGPIOState.ON);
+                    await this.wait(this.pulse);
+                    await this.gpio.write(EsjPiGPIOState.OFF);
+                    await this.wait(this.pulse);
 
                 }
 
-                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-                this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+            }
+
+            this.setUnsecured();
+
+        } else {
+
+            this.platform.log.warn('Locking!!!');
+
+            await this.wait(this.pulse);
+
+            if (this.unsecured) {
+
+                this.setUnsecured();
+
+                this.setTargetUnsecured();
 
             } else {
 
-                this.platform.log.warn('Locking!!!');
-
-                await this.wait(this.pulse);
-
-                this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
-                this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+                this.setSecured();
 
             }
 
         }
-
-        this.detected = false;
 
     }
 
@@ -95,39 +145,36 @@ export class LockMechanismAccessory extends OutputAccessory {
 
         const valueOpen = await this.gpioOpen?.read();
 
-        if (valueOpen == 1) {
+        if (valueOpen == EsjPiGPIOState.OFF) {
 
-            this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
+            this.setUnsecured();
 
-            this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+            this.setTargetUnsecured();
 
         }
 
     }
 
-    virtualControl(value: any) {
+    setSecured() {
 
-        if (value) {
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
+        this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
 
-            this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.UNSECURED);
+    }
 
-            this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
+    setUnsecured() {
 
-        }
+        this.unsecured = true;
 
-        else {
+        this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.UNSECURED;
+        this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
-            this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.SECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockTargetState.SECURED);
+    }
 
-            this.characteristic.LockCurrentState = this.platform.Characteristic.LockCurrentState.SECURED;
-            this.service.updateCharacteristic(this.platform.Characteristic.LockCurrentState, this.platform.Characteristic.LockCurrentState.SECURED);
+    setTargetUnsecured() {
 
-        }
+        this.characteristic.LockTargetState = this.platform.Characteristic.LockTargetState.UNSECURED;
+        this.service.updateCharacteristic(this.platform.Characteristic.LockTargetState, this.platform.Characteristic.LockCurrentState.UNSECURED);
 
     }
 
