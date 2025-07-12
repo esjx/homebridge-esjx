@@ -8,7 +8,7 @@ export class LockMechanismAccessory extends OutputAccessory {
 
     protected gpioOpen?: EsjInputGPIO;
 
-    protected unsecured = true;
+    protected unsecured = false;
 
     protected pulse = 500;
     protected times = 3;
@@ -122,19 +122,13 @@ export class LockMechanismAccessory extends OutputAccessory {
 
             this.platform.log.warn('Locking!!!');
 
-            await this.wait(this.pulse);
-
-            if (this.unsecured) {
+            setTimeout(() => {
 
                 this.setUnsecured();
 
                 this.setTargetUnsecured();
 
-            } else {
-
-                this.setSecured();
-
-            }
+            }, 1000);
 
         }
 
