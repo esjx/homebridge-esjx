@@ -126,13 +126,23 @@ export class LockMechanismAccessory extends OutputAccessory {
 
             this.platform.log.warn('Locking!!!');
 
-            setTimeout(() => {
+            await this.wait(this.pulse);
 
-                this.setUnsecured();
+            if (this.unsecured) {
 
-                this.setTargetUnsecured();
+                setTimeout(() => {
 
-            }, 1000);
+                    this.setUnsecured();
+
+                    this.setTargetUnsecured();
+
+                }, 1000);
+
+            } else {
+
+                this.setSecured();
+
+            }
 
         }
 
