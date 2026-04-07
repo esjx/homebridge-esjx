@@ -11,7 +11,7 @@ export class LockMechanismAccessory extends OutputAccessory {
     protected unsecured = false;
 
     protected pulse = 500;
-    protected times = 3;
+    protected times = 1;
 
     constructor(
         protected readonly platform: EsjRPi,
@@ -25,6 +25,7 @@ export class LockMechanismAccessory extends OutputAccessory {
         });
 
         this.pulse = config.time ?? this.pulse;
+        this.times = config.times ?? this.times;
 
     }
 

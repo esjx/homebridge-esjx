@@ -19,6 +19,7 @@ export type Device = {
     serial_number?: string;
     alarm?: Alarm;
     time?: number;
+    times?: number;
     double?: boolean;
 };
 
